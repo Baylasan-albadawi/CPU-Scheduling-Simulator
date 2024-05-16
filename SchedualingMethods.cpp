@@ -1,3 +1,4 @@
+//Baylasan Al-Badawi
 #include<iostream>
 #include <algorithm> 
 #include <queue> 
@@ -5,8 +6,6 @@
 #include<climits>
 #include<fstream>
 using namespace std;
-int context_switch = 1;
-int quantum = 2;
 struct PCB
 {
     int pid;
@@ -52,7 +51,7 @@ bool comparatorPID(struct PCB a, struct PCB b)
     int y = b.pid;
     return x < y;
 }
-void readInputFromFile(int CS,int Q, int AT, int BT) {
+void readInputFromFile(int CS, int AT, int BT) {
     ifstream fin("process.txt");
     if (!fin.is_open()) {
         cerr << "Error: Unable to open file." << endl;
@@ -69,11 +68,33 @@ void readInputFromFile(int CS,int Q, int AT, int BT) {
         ps[i].bt_remaining = bt;
         i++;
     }
-
+    AT = at; BT = bt; CS = cs; 
     fin.close();
 
 }
-void SRT(struct PCB, int n, int CS,int AT,int BT) {
+void readInputFromFile(int CS, int Q, int AT, int BT) {
+    ifstream fin("process.txt");
+    if (!fin.is_open()) {
+        cerr << "Error: Unable to open file." << endl;
+        exit(1);
+    }
+    int cs, q;
+    fin >> cs >> q;
+    int at, bt;
+    int i = 0;
+    while (fin >> at >> bt) {
+        ps[i].pid = i;
+        ps[i].at = at;
+        ps[i].bt = bt;
+        ps[i].bt_remaining = bt;
+        i++; 
+        AT = at; BT = bt; CS = cs; Q = q;
+
+    }
+    fin.close();
+
+}
+void SRT(PCB ps[], int n, int CS, int AT, int BT) {
     //int n;
     float bt_remaining[10];
     bool is_completed[10] = { false }, is_first_process = true;
@@ -84,21 +105,20 @@ void SRT(struct PCB, int n, int CS,int AT,int BT) {
     int max_completion_time, min_arrival_time;
 
     cout << fixed << setprecision(2);
-
+    readInputFromFile(CS, AT, BT);
     for (int i = 0; i < n; i++)
     {
         cout << "\nEnter Process" << i << "Arrival Time: ";
-        ps[i].at = AT;
+        AT = ps[i].at;
         ps[i].pid = i;
     }
 
     for (int i = 0; i < n; i++)
     {
         cout << "\nProcess" << i << "Burst Time: ";
-        ps[i].bt = BT;
+        BT = ps[i].bt;
         bt_remaining[i] = ps[i].bt;
     }
-    /**/
 
     while (completed != n)
     {
@@ -179,26 +199,23 @@ void SRT(struct PCB, int n, int CS,int AT,int BT) {
     cout << "\nThroughput= " << n / (float)length_cycle;
     cout << "\nCPU Utilization(Percentage)= " << cpu_utilization * 100 << endl;
 };
-void FCFS(struct PCB, int n, int CS, int AT, int BT) {
+void FCFS(PCB ps[], int n, int CS, int AT, int BT) {
     //int n;
-    cout << "Enter total number of processes: ";
-    cin >> n;
     float sum_tat = 0, sum_wt = 0, sum_rt = 0;
     int length_cycle, total_idle_time = 0;
     float cpu_utilization;
-
     cout << fixed << setprecision(2);
     for (int i = 0; i < n; i++)
     {
-        cout << "\nEnter Process" << i << "Arrival Time: ";
-        ps[i].at = AT;
+        //cout << "\nEnter Process\t" << i << "Arrival Time: ";
+          AT= ps[i].at;
         ps[i].pid = i;
     }
 
     for (int i = 0; i < n; i++)
     {
-        cout << "\nEnter Process" << i << "Burst Time: ";
-        ps[i].bt = BT;
+        //cout << "\nEnter Process" << i << "Burst Time: ";
+        BT= ps[i].bt ;
     }
 
     //sort
@@ -236,36 +253,34 @@ void FCFS(struct PCB, int n, int CS, int AT, int BT) {
     cout << "\nThroughput= " << n / (float)length_cycle;
     cout << "\nCPU Utilization(Percentage)= " << cpu_utilization * 100 << endl;
 };
-void RR(struct PCB, int n, int CS, int Q, int AT, int BT) {
-    //int n;
-    int  index;
+void RR(PCB ps[], int n, int CS,int Q, int AT, int BT) {
+    int index;
     int cpu_utilization;
     queue<int> q;
     bool visited[100] = { false }, is_first_process = true;
     int current_time = 0, max_completion_time;
     int completed = 0, tq, total_idle_time = 0, length_cycle;
-    cout << "Enter total number of processes: ";
-    cin >> n;
     float sum_tat = 0, sum_wt = 0, sum_rt = 0;
 
     cout << fixed << setprecision(2);
-
+    //front
     for (int i = 0; i < n; i++)
     {
         cout << "\nEnter Process " << i << " Arrival Time: ";
-        ps[i].at = AT;
+        //AT=ps[i].at;
+        cin >> ps[i].at;
         ps[i].pid = i;
     }
 
     for (int i = 0; i < n; i++)
     {
         cout << "\nEnter Process " << i << " Burst Time: ";
-        ps[i].bt = BT;
+        cin >> ps[i].bt;
         ps[i].bt_remaining = ps[i].bt;
     }
 
     cout << "\nEnter time quanta: ";
-    tq = Q;
+    cin >> tq;
 
     //sort structure on the basis of Arrival time in increasing order
     sort(ps, ps + n, comparatorAT);
@@ -275,9 +290,10 @@ void RR(struct PCB, int n, int CS, int Q, int AT, int BT) {
 
     while (completed != n)
     {
-        index = q.front();
-        q.pop();
-
+        if (!q.empty()) {
+            index = q.front();
+            q.pop();
+        }
         if (ps[index].bt_remaining == ps[index].bt)
         {
             ps[index].start_time = max(current_time, ps[index].at);
@@ -350,6 +366,7 @@ void RR(struct PCB, int n, int CS, int Q, int AT, int BT) {
     //sort so that process ID in output comes in Original order (just for interactivity- Not needed otherwise)  
     sort(ps, ps + n, comparatorPID);
 
+
     //Output
     cout << "\nProcess No.\tAT\tCPU Burst Time\tStart Time\tCT\tTAT\tWT\tRT\n";
     for (int i = 0; i < n; i++)
@@ -365,7 +382,6 @@ void RR(struct PCB, int n, int CS, int Q, int AT, int BT) {
 int main()
 {
     int n=0, at=0, bt=0, cs=0, q=0, num = 0;
-    PCB p;
     readInputFromFile(cs,q,at,bt);
 
     cout << "Enter total number of processes(1-10 maximum): ";
@@ -375,15 +391,15 @@ int main()
     switch (num)
     {
     case 1: {
-        FCFS(p,n,cs,at,bt);
+        FCFS(ps, n, cs, at, bt);
         break;
     }
     case 2: {
-        SRT(p,n,cs,at,bt);
+        SRT(ps, n, cs, at, bt);
         break;
     }
     case 3: {
-        RR(p,n,cs,q,at,bt);
+        RR(ps, n, cs,q, at, bt);
         break;
     }
     case 4: {
